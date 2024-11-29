@@ -49,8 +49,6 @@ spec:
 #            - mountPath: /etc/grafana/provisioning
 #              name: f5-dashboards
       restartPolicy: Always
-      imagePullSecrets:
-      - name: docker-registry-secret-k1
       volumes:
         - name: grafana
           persistentVolumeClaim:
