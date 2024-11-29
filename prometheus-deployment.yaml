@@ -38,8 +38,8 @@ spec:
               name: prometheus
       restartPolicy: Always
       terminationGracePeriodSeconds: 300
-      imagePullSecrets:
-      - name: docker-registry-secret-k1
+#      imagePullSecrets:
+#      - name: docker-registry-secret-k1
       volumes:
         - configMap:
             items:
