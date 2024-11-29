@@ -15,7 +15,7 @@ The application consists of three main deployments:
 * **Custom Instance of OpenTelemetry Collector:**  Enhanced with BIG-IP data receivers to fetch data via iControl REST API.
 
 
-### Workflow
+## Workflow
 
 Admin > LB(RE) > Grafana Dashboard
 
@@ -34,7 +34,7 @@ To achieve this:
 This approach provides isolation and simplifies management for individual customers.
 
 
-### Installation
+## Installation
 
 **Prerequisites:**
 
