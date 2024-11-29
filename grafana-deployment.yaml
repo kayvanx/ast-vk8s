@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grafana
+  name: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: GF_SECURITY_ADMIN_PASSWORD
+                  name: env
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: GF_SECURITY_ADMIN_USER
+                  name: env
+            - name: SENSOR_ID
+              valueFrom:
+                configMapKeyRef:
+                  key: SENSOR_ID
+                  name: env
+            - name: SENSOR_SECRET_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  key: SENSOR_SECRET_TOKEN
+                  name: env
+          image: kayvanx/grafana-bigip:v2
+          name: grafana
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/grafana
+              name: grafana
+#            - mountPath: /etc/grafana/provisioning
+#              name: f5-dashboards
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: docker-registry-secret-k1
+      volumes:
+        - name: grafana
+          persistentVolumeClaim:
+            claimName: grafana
+#        - name: f5-dashboards
+#          configMap:
+#            name: f5-grafana-dashboards
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app: grafana
+  name: grafana
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: grafana
+  name: grafana
+spec:
+  ports:
+    - name: "3000"
+      port: 3000
+      targetPort: 3000
+  selector:
+    app: grafana

@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: otel-collector
+  name: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+        - args:
+            - --config=/etc/otel-collector-config/defaults/bigip-scraper-config.yaml
+          env:
+            - name: BIGIP_URL_1
+              valueFrom:
+                configMapKeyRef:
+                  key: BIGIP_URL_1
+                  name: env
+            - name: BIGIP_USER_1
+              valueFrom:
+                configMapKeyRef:
+                  key: BIGIP_USER_1
+                  name: env
+            - name: BIGIP_PASSWORD_1
+              valueFrom:
+                configMapKeyRef:
+                  key: BIGIP_PASSWORD_1
+                  name: env
+            - name: BIGIP_URL_2
+              valueFrom:
+                configMapKeyRef:
+                  key: BIGIP_URL_2
+                  name: env
+            - name: BIGIP_USER_2
+              valueFrom:
+                configMapKeyRef:
+                  key: BIGIP_USER_2
+                  name: env
+            - name: BIGIP_PASSWORD_2
+              valueFrom:
+                configMapKeyRef:
+                  key: BIGIP_PASSWORD_2
+                  name: env
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  key: GF_SECURITY_ADMIN_PASSWORD
+                  name: env
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                configMapKeyRef:
+                  key: GF_SECURITY_ADMIN_USER
+                  name: env
+            - name: SENSOR_ID
+              valueFrom:
+                configMapKeyRef:
+                  key: SENSOR_ID
+                  name: env
+            - name: SENSOR_SECRET_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  key: SENSOR_SECRET_TOKEN
+                  name: env
+          volumeMounts:
+          - name: otel-config-defaults-bigip-scraper-volume
+            mountPath: /etc/otel-collector-config/defaults/bigip-scraper-config.yaml
+            subPath: bigip-scraper-config.yaml
+          - name: otel-receivers-volume
+            mountPath: /etc/otel-collector-config/receivers.yaml
+            subPath: receivers.yaml
+          - name: otel-pipelines-volume
+            mountPath: /etc/otel-collector-config/pipelines.yaml
+            subPath: pipelines.yaml
+          image: ghcr.io/f5devcentral/application-study-tool/otel_custom_collector:v0.7.0
+          name: otel-collector
+      restartPolicy: Always
+      volumes:
+      - name: otel-config-defaults-bigip-scraper-volume
+        configMap:
+          name: otel-config-defaults-bigip-scraper
+      - name: otel-receivers-volume
+        configMap:
+          name: otel-receivers
+      - name: otel-pipelines-volume
+        configMap:
+          name: otel-pipelines
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+spec:
+  ports:
+    - name: "8888"
+      port: 8888
+      targetPort: 8888

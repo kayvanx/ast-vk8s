@@ -1,0 +1,120 @@
+apiVersion: v1
+data:
+  # Grafana UI
+  GF_SECURITY_ADMIN_USER: YOUR_ADMIN_USERNAME
+  GF_SECURITY_ADMIN_PASSWORD: YOUR_ADMIN_PASS
+  # F5 XC Fabric access:
+  SENSOR_ID: YOUR_ID
+  SENSOR_SECRET_TOKEN: YOUR_TOKEN
+  # BigIP Receivers:
+  BIGIP_USER_1: YOUR_BIGIP_USER
+  BIGIP_PASSWORD_1: YOUR_BIGIP_PASSWORD
+  BIGIP_USER_2: ANOTHER_USER
+  BIGIP_PASSWORD_2: ANOTHER_SECRET_PASSWORD
+  # Note: *.bigip.f5 is an LB in kayvan-demo namespace that points to actual BigIPs.
+  BIGIP_URL_1: https://k1-test.bigip.f5 
+  BIGIP_URL_2: https://bigip-test2.bigip.f5 
+kind: ConfigMap
+metadata:
+  name: env
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-config-defaults-bigip-scraper
+data:
+  bigip-scraper-config.yaml: |
+    receivers: ${file:/etc/otel-collector-config/receivers.yaml}
+
+    processors:
+     batch/local:
+     batch/f5-datafabric:
+       send_batch_max_size: 8192
+     # Only export data to f5 (if enabled) every 300s
+     interval/f5-datafabric:
+       interval: 300s
+     # Apply the folowing transformations to metrics bound for F5 Datafabric
+     attributes/f5-datafabric:
+       actions:
+         - key: dataType
+           action: upsert
+           value: bigip-ast-metric
+
+    exporters:
+     otlphttp/metrics-local:
+       endpoint: http://prometheus:9090/api/v1/otlp
+     otlp/f5-datafabric:
+       endpoint: us.edge.df.f5.com:443
+       headers:
+         # Requires Sensor ID and Token to authenticate.
+         Authorization: "kovacs ${env:SENSOR_ID} ${env:SENSOR_SECRET_TOKEN}"
+         X-F5-OTEL: "GRPC"
+       tls:
+         insecure: false
+         ca_file: /etc/ssl/certs/ca-certificates.pem
+     debug/bigip:
+       verbosity: basic
+       sampling_initial: 5
+       sampling_thereafter: 200
+
+    service:
+     pipelines: ${file:/etc/otel-collector-config/pipelines.yaml}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-receivers
+data:
+  receivers.yaml: |
+    bigip/1:
+      collection_interval: 30s
+      data_types:
+        f5.dns:
+          enabled: false
+        f5.gtm:
+          enabled: false
+      endpoint: ${env:BIGIP_URL_1}
+      password: ${env:BIGIP_PASSWORD_1}
+      tls:
+        ca_file: ""
+        insecure_skip_verify: true
+      username: ${env:BIGIP_USER_1}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-pipelines
+data:
+  pipelines.yaml: |
+    metrics/local:
+      exporters:
+      - otlphttp/metrics-local
+      - debug/bigip
+      processors:
+      - batch/local
+      receivers:
+      - bigip/1
+---
+apiVersion: v1
+data:
+  prometheus.yml: |-
+    global:
+      scrape_interval: 1m
+
+    scrape_configs:
+      - job_name: 'prometheus'
+        scrape_interval: 1m
+        static_configs:
+          - targets: ['localhost:9090']
+      - job_name: 'otel-collector'
+        scrape_interval: 30s
+        static_configs:
+          - targets: ['otel-collector:8888']
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  name: prometheus-cm0
+---
+
+
