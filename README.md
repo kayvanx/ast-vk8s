@@ -10,7 +10,7 @@ This solution enables F5 SEs to quickly set up dedicated AST instances for each 
 
 The application consists of three main deployments:
 
-* **Custom instance of Grafana:**  Provides the user interface and dashboards. This image includes pre-built dashboards for all BigIP devices.
+* **Custom instance of Grafana:**  Provides the user interface and dashboards. This image includes pre-built dashboards for BigIP devices.
 * **Prometheus:** A time-series database used for storing and querying the collected data.
 * **Custom Instance of OpenTelemetry Collector:**  Enhanced with BIG-IP data receivers to fetch data via iControl REST API.
 
