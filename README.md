@@ -3,7 +3,7 @@
 
 This project provides a custom Kubernetes deployment of the Application Study Tool (AST). AST is a powerful tool that helps analyze and monitor the performance of F5 BIG-IP devices.  For detailed configuration, troubleshooting information, and more, see the [AST Docsite](https://f5devcentral.github.io/application-study-tool/).
 
-This solution enables System Engineers to quickly set up dedicated AST instances for each customer. Since AST requires iControl access to BigIP devices, this deployment simplifies access by targeting an LB (`*.bigip.f5`) where each BigIP is defined as a route. This allows access to the BigIP devices either through the customer's network (via CE) or over the internet.
+This solution enables F5 SEs to quickly set up dedicated AST instances for each customer. Since AST requires iControl access to BigIP devices, this deployment simplifies access by targeting an LB (`*.bigip.f5`) where each BigIP is defined as a route. This allows access to the BigIP devices either through the customer's network (via CE) or over the internet.
 
 
 **Architecture:**
